@@ -1,0 +1,150 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>BehaveMonitor</title>
+
+        <link rel="stylesheet" href="https://s3-us-west-2.amazonaws.com/colors-css/2.2.0/colors.min.css">
+        <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="./lib/bootstrap-table/bootstrap-table.min.css" />
+        
+        <style>
+            #gmap{
+                width: 100%;
+                height: 600px;
+            }
+        </style>
+
+        <script type="text/javascript" src="./Scripts/BehaveMonitor.js"></script>
+        <script type="text/javascript" src="./js/jquery-3.6.0.slim.min.js"></script>
+        <script type="text/javascript" src="./js/xmlhttp.js"></script>
+        <script type="text/javascript" src="./js/popper.min.js"></script>
+        <script type="text/javascript" src="./js/4.6.0/bootstrap.min.js"></script>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+        <script type="text/javascript" src="https://code.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="./lib/bootstrap-table/bootstrap-table.min.js"></script>
+        <script type="text/javascript" src="./lib/bootstrap-table/extensions/filter-control/bootstrap-table-filter-control.js"></script>
+    </head>
+
+    <body style="background-color:#F3EBDD;" onLoad="GetTerminalMst()">
+        <div id="header" class="sticky-top d-flex align-items-center" style="height:45px; background-color: #86AC41;vertical-align:central;">
+            <div style="color:white;font-size:x-large;font-weight: bold;">BehaveMonitor</div>
+        </div>
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-2" style="background-color:#F3EBDD;margin-bottom:10px;">
+                    <h5 style="color:black;padding-top: 10px;">表示条件</h5>
+                    <hr />
+                    
+                    <div class="form-group">
+                        <div class="form-group">
+                            <div class="row gx-1">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="SheepInfoMode" value="ALL" id="SheepInfoMode1" onchange="ChangeSheepInfo()" checked>
+                                    <label class="form-check-label" for="formRadioDefault1">全頭表示</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="SheepInfoMode" value="FILTER" id="SheepInfoMode2" onchange="ChangeSheepInfo()">
+                                    <label class="form-check-label" for="formRadioDefault2">特定表示</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row gx-1">
+                            <div class="col-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="SheepGroupList" list="dt1" onchange="SetSheepList()" disabled>
+                                    <label for="floatingSelect">Group</label>
+                                    <datalist id="dt1"></datalist>
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="SheepIdList" list="dt2" disabled>
+                                    <label for="floatingSelect">Sheep ID</label>
+                                    <datalist id="dt2"></datalist>
+                                </div>
+                            </div>
+
+                            <label class="form-check-label" style="color:darkgray">ｻﾝﾌﾟﾙﾃﾞｰﾀ：'A005' or 'B003'</label>
+
+                            <div class="label"><label style="color:black;">日時</label></div>
+                            <div class="column col-8"><input type="date" class="form-control" id="targetDate" value="2021-05-21" disabled></div>
+
+                            <div class="row gx-1 gy-1">
+                                <div class="form col-sm-12">
+                                    <button class="btn btn-success mb-3" type="button" id="BtnSheepDisplay" onClick="SheepInfoDisplay()">表示</button>
+                                </div>
+                            </div>
+
+                            <hr />
+
+                            <div class="row gx-1 gy-1">
+                                <div class="form-inline">
+                                    <button class="btn btn-success mb-1" type="button" id="BtnFullOpenSpeechBubble" onClick="FullOpenSpeechBubble()">吹出表示</button>
+                                    <button class="btn btn-success mb-1" type="button" id="BtnCloseSpeechBubble" onClick="CloseSpeechBubble()">吹出消去</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="form-group d-none d-md-block">
+                            <h5 style="color:black;padding-top: 40px;">送信機情報</h5>
+                            <hr />
+                            <div id ='transmitterInfo1'></div>
+                        </div>
+                        <div id="Loading" style="display:none;">
+                            <p class="loadmsg" style="color:red;font-size: 20px;padding-top: 40px;">位置情報がありません。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-7" style="background-color:#F3EBDD;margin-bottom:10px;">
+                    <div class="my-1 border-success rounded" id="gmap"></div> 
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">衛星写真</button>
+                        <ul class="dropdown-menu">
+                            <li><button class="dropdown-item" onClick="ChangeMapType('0')" value="衛星写真">衛星写真</button></li>
+                            <li><button class="dropdown-item" onClick="ChangeMapType('1')" value="地図">地図</button></li>
+                            <li><button class="dropdown-item" onClick="ChangeMapType('2')" value="地形情報">地形情報</button></li>
+                        </ul>
+                    </div>
+                    <div id="resultData"></div>
+                </div>
+
+                <div class="col-md-3" style="background-color:#F3EBDD;">
+                    <h5 style="color:black;padding-top: 10px;">放牧羊リスト</h5>
+                    <hr />
+        
+                    <div class="panel-body">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <div class="border border-success pt-2 pb-4 px-2 m-0 bg-light rounded col-sm-12">
+                                        <table class="table-responsive table-sm text-nowrap" id="SheepList" data-row-style="rowStyle"></table>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="form-group d-block d-md-none">
+                    <h5 style="color:black;padding-top: 40px;">送信機情報</h5>
+                    <hr />
+                    <div id ='transmitterInfo2'></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APIキー -->
+        <!-- AIzaSyCZj9D5NpevPBkX1UMkbS34TWspGTWu0JU （通常時）-->
+        <!-- AIzaSyDcvMc_Zp-X0KQZ9EsXfuYjL89mV3UJ3FQ （動作確認用）-->
+
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCZj9D5NpevPBkX1UMkbS34TWspGTWu0JU&callback=InitMap">
+        </script>
+    </body>
+</html>
